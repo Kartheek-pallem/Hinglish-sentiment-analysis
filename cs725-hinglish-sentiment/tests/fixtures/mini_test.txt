@@ -1,0 +1,7 @@
+meta	201
+bahut	Hin
+achha	Hin
+
+meta	202
+worst	Eng
+service	Eng

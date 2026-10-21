@@ -1,0 +1,21 @@
+meta	101	positive
+All	Eng
+the	Eng
+best	Eng
+jeet	Hin
+ke	Hin
+aana	Hin
+
+meta	102	neutral
+	O
+RT	Eng
+@	O
+someuser	Eng
+kab	Hin
+aayega	Hin
+
+meta	103	negative
+bekaar	Hin
+:(	EMT
+badhai	Hin
+ho
