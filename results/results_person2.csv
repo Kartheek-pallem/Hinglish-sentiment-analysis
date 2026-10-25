@@ -1,0 +1,21 @@
+run_id,date,owner,model,dataset,preprocessing,features,dict_size,seed,train_fraction,n,accuracy,precision_macro,recall_macro,macro_f1,f1_negative,f1_neutral,f1_positive,train_time_s,infer_time_s,params,notes
+person2_logreg_sentimix-val_raw_word,2026-10-25 22:31,person2,logreg,sentimix_val,raw,word,,,1.0,3000,0.6127,0.6153,0.6189,0.6167,0.6443,0.534,0.6718,,,,C=1.0
+person2_logreg_sentimix-test_raw_word,2026-10-25 22:31,person2,logreg,sentimix_test,raw,word,,,1.0,3000,0.672,0.6777,0.6748,0.6762,0.6951,0.5937,0.7398,1.16,0.0004,127854,C=1.0
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.597,0.5993,0.6039,0.6013,0.6398,0.5118,0.6521,,,,C=1.0 final
+person2_svm_sentimix-test_raw_word,2026-10-25 22:35,person2,svm,sentimix_test,raw,word,,,1.0,3000,0.6357,0.6398,0.6394,0.6396,0.6659,0.5483,0.7044,0.12,0.0005,127854,C=1.0
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.5777,0.5908,0.5763,0.5811,0.5646,0.5284,0.6502,,,,C=0.01
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.5997,0.6015,0.6056,0.6033,0.6213,0.5166,0.6721,,,,C=0.03
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.6087,0.6095,0.6161,0.6121,0.6412,0.5192,0.6758,,,,C=0.1
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.6073,0.6086,0.6148,0.611,0.6466,0.5201,0.6663,,,,C=0.3
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.597,0.5993,0.6039,0.6013,0.6398,0.5118,0.6521,,,,C=1
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.5797,0.582,0.5861,0.5838,0.6234,0.5016,0.6263,,,,C=3
+person2_svm_sentimix-val_raw_word,2026-10-25 22:35,person2,svm,sentimix_val,raw,word,,,1.0,3000,0.6087,0.6095,0.6161,0.6121,0.6412,0.5192,0.6758,,,,C=0.1 final
+person2_svm_sentimix-test_raw_word,2026-10-25 22:35,person2,svm,sentimix_test,raw,word,,,1.0,3000,0.673,0.676,0.677,0.6765,0.7009,0.5871,0.7415,0.04,0.0002,127854,C=0.1
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.6007,0.6127,0.5992,0.604,0.5936,0.5593,0.659,,,,C=0.01
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.616,0.6201,0.6198,0.6199,0.6352,0.555,0.6694,,,,C=0.03
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.617,0.62,0.6218,0.6207,0.6354,0.5503,0.6763,,,,C=0.1
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.6087,0.6106,0.6141,0.612,0.6283,0.5377,0.6701,,,,C=0.3
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.5947,0.5964,0.6009,0.5982,0.6276,0.5194,0.6477,,,,C=1
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.5767,0.5786,0.5832,0.5806,0.6195,0.4982,0.624,,,,C=3
+person2_svm_sentimix-val_raw_char,2026-10-25 22:35,person2,svm,sentimix_val,raw,char,,,1.0,3000,0.617,0.62,0.6218,0.6207,0.6354,0.5503,0.6763,,,,C=0.1 final
+person2_svm_sentimix-test_raw_char,2026-10-25 22:35,person2,svm,sentimix_test,raw,char,,,1.0,3000,0.678,0.6848,0.6808,0.6826,0.7096,0.6051,0.733,0.44,0.0025,366903,C=0.1

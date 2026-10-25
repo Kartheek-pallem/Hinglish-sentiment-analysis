@@ -1,0 +1,3 @@
+run_id,date,owner,model,dataset,preprocessing,features,dict_size,seed,train_fraction,n,accuracy,precision_macro,recall_macro,macro_f1,f1_negative,f1_neutral,f1_positive,train_time_s,infer_time_s,params,notes
+person1_logreg_sentimix-val_raw_word,2026-10-25 22:33,person1,logreg,sentimix_val,raw,word,,,1.0,3000,0.6127,0.6153,0.6189,0.6167,0.6443,0.534,0.6718,,,,C=1.0
+person1_logreg_sentimix-test_raw_word,2026-10-25 22:33,person1,logreg,sentimix_test,raw,word,,,1.0,3000,0.672,0.6777,0.6748,0.6762,0.6951,0.5937,0.7398,4.35,0.0005,127854,C=1.0
