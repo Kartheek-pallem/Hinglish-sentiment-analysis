@@ -1,0 +1,5 @@
+Linear SVM: person2_svm_sentimix-test_cleaned_char (val 0.6281, test 0.6909)
+Logistic regression: person1_logreg_sentimix-test_cleaned_char (val 0.6227, test 0.6839)
+Naive Bayes: person3_naive-bayes_sentimix-test_cleaned_word (val 0.6126, test 0.6730)
+Complement NB: person3_complement-nb_sentimix-test_raw_word (val 0.5874, test 0.6398)
+Decision tree: person4_decision-tree_sentimix-test_normalized_word_dall_s42 (val 0.5138, test 0.5494)

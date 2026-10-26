@@ -1,0 +1,6 @@
+     model features size  rows_used  macro_f1  val_f1
+Linear SVM     char    0          0    0.6909  0.6281
+Linear SVM     char   50         50    0.6859  0.6256
+Linear SVM     char  100        100    0.6883  0.6246
+Linear SVM     char  200        200    0.6896  0.6236
+Linear SVM     char  all        792    0.6905  0.6271
