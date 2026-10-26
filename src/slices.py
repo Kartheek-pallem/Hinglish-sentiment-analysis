@@ -1,141 +1,107 @@
-"""Create difficulty slices for the SentiMix test tweets.
+"""Slices for research question Q2: which kinds of tweets make the models fail?  Owners: Persons 1 and 4.
 
-A slice is a named subset of examples, such as tweets containing negation.
-The code creates one row per test tweet and writes data/processed/slices.csv.
+A "slice" is a group of test tweets that share one property. Comparing a model's
+macro-F1 on each slice with its overall macro-F1 shows where it breaks.
 
-Run from the project root:
-    python -m src.slices
+For every val and test tweet this file computes:
+  cmi           Code-Mixing Index (Das & Gambäck, 2014), 0-50 for two languages:
+                    CMI = 100 * (1 - (words of the main language) / (words tagged Hindi or English))
+                0 = one language only, 50 = exactly half Hindi and half English.
+                User names and links are left out (the tagger calls them "English").
+  cmi_level     low (CMI <= 20), medium (20-35), high (> 35)
+  negation      yes/no - contains nahi, nhi, mat, not, no, never, don't, ...
+                ("na" is left out on purpose: it is often not a negation, as in "karo na")
+  spelling_var  yes/no - contains a word that normalize() would rewrite (a known spelling variant)
+  length        short (<= 10 words after clean()), medium (11-20), long (> 20)
+  emoji         yes/no
+
+    python3 -m src.slices            # writes data/processed/slices_val.csv and slices_test.csv
+
+Then `python3 scripts/make_tables.py` turns saved predictions into the Q2 table.
+Sarcasm is not here yet: it needs the hand-tagged sample (after the mid review).
 """
 from __future__ import annotations
 
-import argparse
 import os
 import re
 
 import pandas as pd
 
-# Starter heuristic list, not a perfect linguistic resource.
-# Coordinate this list with Person 2's normalization dictionary.
-SPELLING_VARIANTS = {
-    "acha", "accha", "achchha",
-    "bohot", "bht",
-    "nahin", "nahi", "nhi", "nai",
-    "muje", "tumhe", "kyu",
+from src.clean import clean
+
+NEGATION = {
+    # Hindi (Romanized)
+    "nahi", "nahin", "nhi", "nai", "nhin", "nahee", "nh", "mat", "mt", "bina", "naa",
+    # English
+    "not", "no", "never", "nothing", "nobody", "none", "neither", "nor", "cannot",
+    "dont", "don't", "didnt", "didn't", "doesnt", "doesn't", "isnt", "isn't", "wasnt", "wasn't",
+    "cant", "can't", "wont", "won't", "shouldnt", "shouldn't", "wouldnt", "wouldn't", "aint", "n't",
 }
-
-# Negation words in English and common Romanized Hindi/Hinglish forms.
-# "na" is intentionally not included because it can be used in several ways.
-NEGATION_RE = re.compile(
-    r"\b(?:nahi|nahin|nhi|nai|mat|no|not|never|without|n't)\b",
-    flags=re.IGNORECASE,
-)
+_EMOJI = re.compile("[\U0001F300-\U0001FAFF☀-➿]")
+LEVELS = {"cmi_level": ["low", "medium", "high"], "negation": ["no", "yes"], "spelling_var": ["no", "yes"],
+          "length": ["short", "medium", "long"], "emoji": ["no", "yes"]}
 
 
-def build_slices(
-    data_dir: str = "data/processed",
-    output_path: str | None = None,
-) -> pd.DataFrame:
-    """Build test-set slice flags and code-mixing statistics.
+_LINK_PIECES = {"https", "http", ":", "//", "/", "t", ".", "co", "tco"}
 
-    Inputs:
-      sentimix_test.csv: id, text, label, source, split
-      word_tags.csv: id, split, position, token, tag
 
-    Output: one row per test tweet, including booleans for the slices.
-    """
-    test_path = os.path.join(data_dir, "sentimix_test.csv")
-    tags_path = os.path.join(data_dir, "word_tags.csv")
-    if output_path is None:
-        output_path = os.path.join(data_dir, "slices.csv")
+def _real_word_tags(tokens: list[str], tags: list[str]) -> list[str]:
+    """Language tags of real words only: drops '@ user _ name' and 'https // t . co / xyz' pieces."""
+    keep, i, n = [], 0, len(tokens)
+    while i < n:
+        low = tokens[i].lower()
+        if low in ("@", "@_"):                      # "@ Sana _ arshaa": skip the name and its "_ pieces"
+            i += 2
+            while i + 1 < n and tokens[i] == "_":
+                i += 2
+            continue
+        if low.startswith("http"):                  # "https // t . co / AbC12": skip to the code
+            while i < n and tokens[i].lower() in _LINK_PIECES or (i < n and tokens[i].lower().startswith("http")):
+                i += 1
+            i += 1                                  # the code itself
+            continue
+        if set(low) != {"_"}:
+            keep.append(tags[i])
+        i += 1
+    return keep
 
-    test = pd.read_csv(test_path, dtype={"id": str}, keep_default_na=False)
-    tags = pd.read_csv(tags_path, dtype={"id": str}, keep_default_na=False)
 
-    # Keep only word-level annotations belonging to test tweets.
-    test_tags = tags[tags["split"] == "test"].copy()
+def cmi(tags: list[str]) -> float:
+    eng, hin = tags.count("Eng"), tags.count("Hin")
+    return 0.0 if eng + hin == 0 else 100 * (1 - max(eng, hin) / (eng + hin))
 
-    # Count Hindi and English tokens per tweet. Punctuation/emoticons (O/EMT)
-    # are excluded from the code-mixing calculation.
-    lang_counts = (
-        test_tags[test_tags["tag"].isin(["Eng", "Hin"])]
-        .pivot_table(index="id", columns="tag", values="token",
-                     aggfunc="count", fill_value=0)
-        .reindex(columns=["Eng", "Hin"], fill_value=0)
-    )
-    lang_counts.columns = ["english_tokens", "hindi_tokens"]
-    lang_counts["language_tokens"] = (
-        lang_counts["english_tokens"] + lang_counts["hindi_tokens"]
-    )
 
-    # Index ranges from 0 to 1: 0 means one language dominates completely;
-    # 1 means the English and Hindi token counts are equal.
-    denominator = lang_counts["language_tokens"].replace(0, pd.NA)
-    lang_counts["code_mix_index"] = (
-        2 * lang_counts[["english_tokens", "hindi_tokens"]].min(axis=1)
-        / denominator
-    ).fillna(0.0)
+def build_slices(split: str, data_dir: str = "data/processed") -> pd.DataFrame:
+    from src.normalize import load_dict
 
-    lang_counts["code_mixed"] = (
-        (lang_counts["english_tokens"] > 0)
-        & (lang_counts["hindi_tokens"] > 0)
-    )
+    tweets = pd.read_csv(os.path.join(data_dir, f"sentimix_{split}.csv"), dtype={"id": str})
+    tags = pd.read_csv(os.path.join(data_dir, "word_tags.csv"), dtype={"id": str, "token": str}, keep_default_na=False)
+    tags = tags[tags.split == split].sort_values(["id", "position"])
+    variants = load_dict(None)
 
-    def mix_level(row):
-        if row["language_tokens"] == 0 or not row["code_mixed"]:
-            return "none_or_one_language"
-        if row["code_mix_index"] < 0.34:
-            return "low"
-        if row["code_mix_index"] < 0.67:
-            return "medium"
-        return "high"
-
-    lang_counts["code_mix_level"] = lang_counts.apply(mix_level, axis=1)
-
-    # Use the text column for simple, transparent lexical heuristics.
-    result = test[["id", "text", "label"]].copy()
-    result["text"] = result["text"].fillna("").astype(str)
-    result["has_negation"] = result["text"].map(
-        lambda text: bool(NEGATION_RE.search(text))
-    )
-
-    def has_spelling_variant(text: str) -> bool:
-        tokens = re.findall(r"[A-Za-z]+", text.lower())
-        return any(token in SPELLING_VARIANTS for token in tokens)
-
-    result["has_spelling_variation"] = result["text"].map(has_spelling_variant)
-
-    # Every test ID should receive tag-derived language counts. Fill missing
-    # tag counts safely, while keeping the tweet in the output.
-    result = result.merge(lang_counts.reset_index(), on="id", how="left")
-    for col in ["english_tokens", "hindi_tokens", "language_tokens"]:
-        result[col] = result[col].fillna(0).astype(int)
-    result["code_mix_index"] = result["code_mix_index"].fillna(0.0)
-    result["code_mixed"] = result["code_mixed"].fillna(False).astype(bool)
-    result["code_mix_level"] = result["code_mix_level"].fillna(
-        "none_or_one_language"
-    )
-
-    # Preserve stable row order and avoid duplicating the full tweet text in
-    # later reports if the team wants to share slices.csv.
-    result = result.sort_values("id").reset_index(drop=True)
-    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-    result.to_csv(output_path, index=False)
-
-    print(f"Saved {len(result)} test-tweet slice rows to {output_path}")
-    print(f"Tweets with code-mixing: {int(result['code_mixed'].sum())}")
-    print(f"Tweets with negation: {int(result['has_negation'].sum())}")
-    print(
-        "Tweets with spelling-variation heuristic: "
-        f"{int(result['has_spelling_variation'].sum())}"
-    )
-    print("Code-mixing levels:")
-    print(result["code_mix_level"].value_counts().to_string())
-    return result
+    per_tweet = {i: _real_word_tags(g.token.tolist(), g.tag.tolist()) for i, g in tags.groupby("id")}
+    rows = []
+    for t in tweets.itertuples():
+        words = clean(t.text).split()
+        c = cmi(per_tweet.get(t.id, []))
+        rows.append({
+            "id": t.id, "label": t.label, "cmi": round(c, 1),
+            "cmi_level": "low" if c <= 20 else ("medium" if c <= 35 else "high"),
+            "negation": "yes" if any(w in NEGATION for w in words) else "no",
+            "spelling_var": "yes" if any(w in variants for w in words) else "no",
+            "n_words": len(words),
+            "length": "short" if len(words) <= 10 else ("medium" if len(words) <= 20 else "long"),
+            "emoji": "yes" if _EMOJI.search(clean(t.text)) else "no",
+        })
+    return pd.DataFrame(rows)
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--data-dir", default="data/processed")
-    parser.add_argument("--output", default=None)
-    args = parser.parse_args()
-    build_slices(args.data_dir, args.output)
+    for split in ("val", "test"):
+        df = build_slices(split)
+        out = os.path.join("data", "processed", f"slices_{split}.csv")
+        df.to_csv(out, index=False)
+        print(f"\n{split}: wrote {out} ({len(df)} tweets), mean CMI {df.cmi.mean():.1f}")
+        for col, levels in LEVELS.items():
+            counts = df[col].value_counts()
+            print(f"  {col:<13}" + "  ".join(f"{lv}: {counts.get(lv, 0)}" for lv in levels))
