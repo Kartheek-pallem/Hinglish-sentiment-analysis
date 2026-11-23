@@ -1,0 +1,14 @@
+# Colab already has torch, numpy, pandas, scikit-learn, matplotlib, transformers
+torch>=2.0
+transformers>=4.40
+huggingface_hub
+scikit-learn>=1.3
+pandas
+numpy
+scipy
+matplotlib
+ftfy
+vaderSentiment
+tabulate
+wordcloud
+streamlit>=1.30
