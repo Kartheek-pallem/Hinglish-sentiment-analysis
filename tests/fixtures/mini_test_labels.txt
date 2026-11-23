@@ -1,3 +1,0 @@
-Uid,Sentiment
-201,positive
-202,negative
